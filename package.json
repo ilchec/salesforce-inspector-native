@@ -1,0 +1,20 @@
+{
+  "name": "salesforce-inspector-native",
+  "private": true,
+  "version": "0.8.0",
+  "description": "A standalone Lightning app bundling admin/developer tools, deployed entirely as Salesforce metadata - no browser extension or local install required.",
+  "scripts": {
+    "test:unit": "sfdx-lwc-jest",
+    "test:unit:watch": "sfdx-lwc-jest --watch",
+    "test:unit:coverage": "sfdx-lwc-jest --coverage"
+  },
+  "devDependencies": {
+    "@salesforce/sfdx-lwc-jest": "^7.9.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ilchec/salesforce-inspector-native.git"
+  },
+  "homepage": "https://ilchec.github.io/salesforce-inspector-native/",
+  "license": "MIT"
+}

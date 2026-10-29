@@ -1,0 +1,89 @@
+<template>
+  <div class="app-layout">
+    <div class="nav-column">
+      <lightning-vertical-navigation selected-item={selectedTab} onselect={handleSelect}>
+        <template for:each={navSections} for:item="section">
+          <lightning-vertical-navigation-section key={section.category} label={section.category}>
+            <template for:each={section.items} for:item="item">
+              <lightning-vertical-navigation-item key={item.name} label={item.label} name={item.name}></lightning-vertical-navigation-item>
+            </template>
+          </lightning-vertical-navigation-section>
+        </template>
+        <lightning-vertical-navigation-section label="Admin">
+          <lightning-vertical-navigation-item label="Tab Settings" name="settings"></lightning-vertical-navigation-item>
+          <lightning-vertical-navigation-item label="About" name="about"></lightning-vertical-navigation-item>
+        </lightning-vertical-navigation-section>
+      </lightning-vertical-navigation>
+      <p class="app-version">Salesforce Inspector Native v{appVersion}</p>
+    </div>
+
+    <div class="content-column">
+      <lightning-spinner lwc:if={isLoadingConfig} alternative-text="Loading tab configuration" size="medium"></lightning-spinner>
+
+      <div lwc:if={configErrorText} class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error slds-m-bottom_medium" role="alert">
+        <span>{configErrorText}</span>
+      </div>
+
+      <c-inspector-native-create-records lwc:if={isCreateRecordsActive}></c-inspector-native-create-records>
+      <c-inspector-native-query-records lwc:if={isQueryRecordsActive}></c-inspector-native-query-records>
+      <c-inspector-native-field-creator lwc:if={isFieldCreatorActive}></c-inspector-native-field-creator>
+      <c-inspector-native-permissions-groups lwc:if={isPermissionsGroupsActive}></c-inspector-native-permissions-groups>
+      <c-inspector-native-limits-and-licenses lwc:if={isLimitsLicensesActive}></c-inspector-native-limits-and-licenses>
+      <c-inspector-native-schema-explorer lwc:if={isSchemaExplorerActive}></c-inspector-native-schema-explorer>
+      <c-inspector-native-relationship-map lwc:if={isRelationshipMapActive}></c-inspector-native-relationship-map>
+      <c-inspector-native-data-export lwc:if={isDataExportActive}></c-inspector-native-data-export>
+      <c-inspector-native-fls-matrix lwc:if={isFlsMatrixActive}></c-inspector-native-fls-matrix>
+      <c-inspector-native-org-chart lwc:if={isOrgChartActive}></c-inspector-native-org-chart>
+      <c-inspector-native-record-access lwc:if={isRecordAccessActive}></c-inspector-native-record-access>
+      <c-inspector-native-user-comparison lwc:if={isUserComparisonActive}></c-inspector-native-user-comparison>
+      <c-inspector-native-data-masking lwc:if={isDataMaskingActive}></c-inspector-native-data-masking>
+      <c-inspector-native-picklist-manager lwc:if={isPicklistManagerActive}></c-inspector-native-picklist-manager>
+      <c-inspector-native-dependency-analysis lwc:if={isDependencyAnalysisActive}></c-inspector-native-dependency-analysis>
+      <c-inspector-native-translation-search lwc:if={isTranslationSearchActive}></c-inspector-native-translation-search>
+
+      <template lwc:if={isSettingsActive}>
+        <div class="slds-p-around_medium">
+          <h2 class="slds-text-heading_medium slds-m-bottom_small">Tab Settings</h2>
+          <p class="slds-m-bottom_medium">
+            Which tabs are shown on the left is controlled by the <strong>Salesforce Inspector Native Tab</strong>
+            custom metadata type - one record per tab, with an "Is Enabled" checkbox. Edit records there to show
+            or hide a tab; changes take effect the next time this app loads, no redeploy needed.
+          </p>
+          <lightning-button variant="brand" label="Open in Setup" onclick={handleOpenTabSettings}></lightning-button>
+        </div>
+      </template>
+
+      <template lwc:if={isAboutActive}>
+        <div class="slds-p-around_medium about-panel">
+          <h2 class="slds-text-heading_medium slds-m-bottom_small">Salesforce Inspector Native</h2>
+          <p class="slds-m-bottom_small"><strong>Version:</strong> {appVersion}</p>
+          <p class="slds-m-bottom_medium">
+            A collection of Salesforce data, schema, and admin tools in one Lightning app - deployed
+            entirely as Salesforce metadata, with no local install, browser extension, or Data Loader
+            involved.
+          </p>
+
+          <h3 class="slds-text-heading_small slds-m-bottom_small">Who it's for</h3>
+          <p class="slds-m-bottom_medium">
+            Built for enterprise users on managed, locked-down devices - the kind of environment where
+            installing Data Loader or a browser extension like Salesforce Inspector Reloaded isn't an
+            option at all, whether that's IT policy, a lack of local admin rights, or a browser
+            extension allowlist that doesn't include it. Every tool here runs inside Salesforce's own
+            domain, nothing to explain to IT beyond "this is a deployed managed component."
+          </p>
+
+          <h3 class="slds-text-heading_small slds-m-bottom_small">License</h3>
+          <p class="slds-m-bottom_medium">
+            This tool is fully open source, released under the <strong>MIT License</strong>.
+          </p>
+
+          <h3 class="slds-text-heading_small slds-m-bottom_small">Attribution</h3>
+          <p>
+            Org Chart is inspired by, but not a code port of,&nbsp;
+            <a href="https://github.com/svierk/awesome-lwc-collection/tree/main/force-app/main/default/lwc/orgChartViewer" target="_blank" rel="noopener noreferrer">svierk's orgChartViewer</a>&nbsp;(MIT licensed).
+          </p>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>

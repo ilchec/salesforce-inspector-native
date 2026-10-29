@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <brand>
+        <headerColor>#0176D3</headerColor>
+    </brand>
+    <description>Salesforce Inspector Native - data, schema, security and org admin tools in one Lightning app.</description>
+    <formFactors>Large</formFactors>
+    <label>Salesforce Inspector Native</label>
+    <navType>Standard</navType>
+    <tabs>Salesforce_Inspector_Native</tabs>
+    <uiType>Lightning</uiType>
+</CustomApplication>

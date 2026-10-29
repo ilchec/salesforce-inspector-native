@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Salesforce Inspector Native</title>
+<meta name="description" content="Sixteen admin and developer tools in one Lightning app, installed as plain Salesforce metadata. No browser extension, no Data Loader, no local install.">
+<meta property="og:title" content="Salesforce Inspector Native">
+<meta property="og:description" content="Sixteen admin and developer tools in one Lightning app, installed as plain Salesforce metadata.">
+<meta property="og:image" content="https://ilchec.github.io/salesforce-inspector-native/media/poster.jpg">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230176d3'/%3E%3Ccircle cx='14' cy='14' r='7' fill='none' stroke='white' stroke-width='3'/%3E%3Cpath d='M19 19l6 6' stroke='white' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #f7f9fc; --surface: #ffffff; --surface-2: #eef3f9; --text: #16202c; --muted: #52606d;
+  --line: #d8e0ea; --brand: #0176d3; --brand-ink: #014486; --accent: #032d60; --code: #0b1b2b;
+  --code-text: #e6edf5; --ok: #2e844a; --warn: #a96404; --shadow: 0 1px 2px rgba(16,32,48,.06), 0 8px 24px rgba(16,32,48,.06);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1520; --surface: #131e2b; --surface-2: #192737; --text: #e7eef6; --muted: #9fb0c2;
+    --line: #26384c; --brand: #4fa3ff; --brand-ink: #9fcbff; --accent: #0b5cab; --code: #08111b;
+    --code-text: #e6edf5; --ok: #6cc58a; --warn: #f0b35a; --shadow: none; color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
+a { color: var(--brand); }
+code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em; }
+:not(pre) > code { background: var(--surface-2); padding: .1em .35em; border-radius: 4px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; }
+
+header.top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+header.top .wrap { display: flex; align-items: center; gap: 20px; height: 56px; }
+.brand { font-weight: 700; color: var(--text); text-decoration: none; display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+.brand svg { flex: none; }
+header nav { display: flex; gap: 18px; margin-left: auto; overflow-x: auto; }
+header nav a { color: var(--muted); text-decoration: none; font-size: 14px; white-space: nowrap; }
+header nav a:hover { color: var(--text); }
+
+.hero { background: linear-gradient(135deg, #032d60 0%, #0b5cab 55%, #1b96ff 100%); color: #fff; padding-block: 64px 120px; }
+.hero h1 { font-size: clamp(34px, 5vw, 54px); line-height: 1.1; margin: 0 0 16px; letter-spacing: -.01em; }
+.hero p.lead { font-size: clamp(17px, 2vw, 21px); max-width: 720px; margin: 0 0 28px; opacity: .93; }
+.hero .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 30px; }
+.hero .chip { border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 4px 12px; font-size: 13px; }
+.btns { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 8px; font-weight: 600; text-decoration: none; border: 1px solid transparent; }
+.btn.primary { background: #fff; color: #032d60; }
+.btn.ghost { border-color: rgba(255,255,255,.55); color: #fff; }
+.btn:hover { filter: brightness(.95); }
+
+.player { margin-top: -84px; display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
+.player video { width: 100%; aspect-ratio: 1440 / 900; border-radius: 8px; background: #000; display: block; }
+.chapters { overflow-y: auto; max-height: 480px; }
+.chapters h3 { margin: 4px 6px 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.chapters button { all: unset; box-sizing: border-box; display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; }
+.chapters button:hover { background: var(--surface-2); }
+.chapters button[aria-current="true"] { background: var(--surface-2); color: var(--brand-ink); font-weight: 600; }
+.chapters button span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+.chapters button:focus-visible { outline: 2px solid var(--brand); }
+
+section { padding-block: 56px 8px; }
+h2 { font-size: 30px; margin: 0 0 8px; letter-spacing: -.01em; }
+h2 + p.sub { color: var(--muted); margin: 0 0 28px; max-width: 760px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); }
+.card h3 { margin: 0 0 6px; font-size: 17px; }
+.card p { margin: 0; color: var(--muted); }
+
+.steps { counter-reset: step; list-style: none; padding: 0; margin: 0; display: grid; gap: 14px; }
+.steps > li { min-width: 0; counter-increment: step; position: relative; padding: 18px 20px 18px 64px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.steps > li::before { content: counter(step); position: absolute; left: 20px; top: 18px; width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 14px; }
+.steps h3 { margin: 2px 0 6px; font-size: 17px; }
+.steps p { margin: 0 0 8px; color: var(--muted); }
+pre { background: var(--code); color: var(--code-text); padding: 14px 16px; border-radius: 8px; overflow-x: auto; margin: 8px 0 0; line-height: 1.5; }
+
+.group-title { display: flex; align-items: baseline; gap: 12px; margin: 40px 0 14px; padding-bottom: 8px; border-bottom: 2px solid var(--line); }
+.group-title h3 { margin: 0; font-size: 22px; }
+.group-title span { color: var(--muted); font-size: 14px; }
+.tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.tool { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 20px 22px; display: flex; flex-direction: column; }
+.tool header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.tool h4 { margin: 0; font-size: 18px; }
+.tool .what { color: var(--muted); margin: 0 0 12px; }
+.tool ol { margin: 0 0 12px; padding-left: 20px; }
+.tool ol li { margin-bottom: 4px; }
+.tool .note { margin-top: auto; font-size: 14px; color: var(--muted); background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.tag { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 9px; white-space: nowrap; border: 1px solid currentColor; }
+.tag.ro { color: var(--ok); } .tag.rw { color: var(--warn); }
+.watch { all: unset; cursor: pointer; color: var(--brand); font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.watch:hover { text-decoration: underline; }
+.watch:focus-visible { outline: 2px solid var(--brand); border-radius: 4px; }
+
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { background: var(--surface-2); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 10px; }
+summary { cursor: pointer; font-weight: 600; }
+details p { color: var(--muted); margin: 10px 0 0; }
+
+footer { margin-top: 64px; padding-block: 32px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+
+@media (max-width: 900px) {
+  .player { grid-template-columns: 1fr; }
+  .chapters { max-height: 260px; }
+  .grid3, .tools { grid-template-columns: 1fr; }
+  header nav { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <svg width="24" height="24" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#0176d3"/><circle cx="14" cy="14" r="7" fill="none" stroke="#fff" stroke-width="3"/><path d="M19 19l6 6" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+      Salesforce Inspector Native
+    </a>
+    <nav aria-label="Sections">
+      <a href="#demo">Demo</a>
+      <a href="#install">Install</a>
+      <a href="#tools">Tools</a>
+      <a href="#permissions">Permissions</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/ilchec/salesforce-inspector-native">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero" id="top">
+  <div class="wrap">
+    <h1>Salesforce Inspector Native</h1>
+    <p class="lead">Sixteen admin and developer tools in one Lightning app. You install it as plain Salesforce metadata, so there's no browser extension, Data Loader or local install to get approved.</p>
+    <div class="chips">
+      <span class="chip">Open source · MIT</span>
+      <span class="chip">Runs inside your org</span>
+      <span class="chip">GraphQL first, minimal Apex</span>
+      <span class="chip">No external scripts</span>
+    </div>
+    <div class="btns">
+      <a class="btn primary" href="#install">Install in 2 commands</a>
+      <a class="btn ghost" href="https://github.com/ilchec/salesforce-inspector-native">View on GitHub</a>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+
+  <div class="player" id="demo">
+    <video id="video" controls preload="metadata" playsinline poster="media/poster.jpg">
+      <source src="media/demo.mp4" type="video/mp4">
+      <track kind="chapters" src="media/chapters.vtt" srclang="en" label="Chapters" default>
+      Your browser can't play this video. <a href="media/demo.mp4">Download it</a> instead.
+    </video>
+    <div class="chapters" aria-label="Video chapters">
+      <h3>Chapters</h3>
+      <div id="chapterList"></div>
+    </div>
+  </div>
+
+  <section id="why">
+    <h2>Why it exists</h2>
+    <p class="sub">On many corporate laptops you can't install Data Loader or a browser extension like Salesforce Inspector Reloaded. That might be IT policy, missing admin rights, or an extension allowlist. This app gives you the same kind of tools inside Salesforce.</p>
+    <div class="grid3">
+      <div class="card"><h3>Nothing to install locally</h3><p>It deploys like any other metadata. You open it from the App Launcher, and all calls go to your org's own domain.</p></div>
+      <div class="card"><h3>Respects your access</h3><p>Every tool runs as you, with your object, field and sharing access. The permission set only opens the app. It grants no data access.</p></div>
+      <div class="card"><h3>Review before it writes</h3><p>Tools that change things stage the change first. Nothing is written until you click Save, Apply or Deploy.</p></div>
+    </div>
+  </section>
+
+  <section id="install">
+    <h2>Install</h2>
+    <p class="sub">Try it in a sandbox or Developer Edition org first. You need the <a href="https://developer.salesforce.com/tools/salesforcecli">Salesforce CLI</a>.</p>
+    <ol class="steps">
+      <li>
+        <h3>Deploy the metadata</h3>
+        <pre><code>git clone https://github.com/ilchec/salesforce-inspector-native.git
+cd salesforce-inspector-native
+sf org login web --alias myorg
+sf project deploy start --target-org myorg</code></pre>
+      </li>
+      <li>
+        <h3>Assign the permission set</h3>
+        <p>Setup → Permission Sets → <strong>Salesforce Inspector Native</strong> → Manage Assignments → Add Assignment. Or from the CLI:</p>
+        <pre><code>sf org assign permset --name Salesforce_Inspector_Native --target-org myorg</code></pre>
+      </li>
+      <li>
+        <h3>Open the app</h3>
+        <p>In the App Launcher, search for <strong>Salesforce Inspector Native</strong>. Tools are grouped into Data, Schema, Users &amp; Security and Org Info in the left-hand menu.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section id="tools">
+    <h2>The tools, and how to use them</h2>
+    <p class="sub">Each card says what the tool is for, gives the steps, and has a link to that part of the video. <span class="tag ro">Read-only</span> tools never change your org. <span class="tag rw">Writes</span> tools change it, but only when you confirm.</p>
+
+    <div class="group-title"><h3>Data</h3><span>Records in and out</span></div>
+    <div class="tools">
+      <article class="tool" id="create-records">
+        <header><h4>Create Records</h4><span class="tag rw">Writes</span></header>
+        <button class="watch" data-chapter="createRecords">▶ Watch</button>
+        <p class="what">Create or upsert many records at once in a grid.</p>
+        <ol>
+          <li>Pick an <strong>Object</strong>, then a <strong>Layout</strong>: Default Layout, a record type, All Fields or Required Only.</li>
+          <li>Add rows: <strong>Paste from Excel</strong>, <strong>Import CSV</strong>, or <strong>Add Row</strong> and type.</li>
+          <li>Check the column mapping. Matching headers map automatically. Map the rest with the dropdowns, or drag a column onto a field.</li>
+          <li>To update existing records instead of creating duplicates, tick <strong>Match key</strong> (or use <strong>Match Fields</strong>) on a unique field.</li>
+          <li>Click <strong>Save</strong> and choose <em>Partial success</em> or <em>All or nothing</em>. The results link to every saved record.</li>
+        </ol>
+        <p class="note"><strong>Download CSV Template</strong> gives you a file with the right headers for the chosen layout.</p>
+      </article>
+      <article class="tool" id="query-records">
+        <header><h4>Query Records</h4><span class="tag rw">Writes</span></header>
+        <button class="watch" data-chapter="queryRecords">▶ Watch</button>
+        <p class="what">Run SOQL, then work with the results in place.</p>
+        <ol>
+          <li>Type a query, for example <code>SELECT Id, Name, Owner.Name FROM Account</code>, and click <strong>Execute Query</strong>.</li>
+          <li>Results open read-only. Click <strong>Edit</strong> to change values, then <strong>Save</strong>. Each edited row updates its own record.</li>
+          <li><strong>Export CSV</strong> downloads the grid as it is now, including unsaved edits.</li>
+          <li>To delete, tick rows and click <strong>Delete Selected</strong>, then confirm.</li>
+        </ol>
+        <p class="note">Parent fields such as <code>Account.Owner.Name</code> show as read-only columns. Child subqueries aren't supported. Results are capped at 200 rows, so use Data Export for more.</p>
+      </article>
+      <article class="tool" id="data-export">
+        <header><h4>Data Export</h4><span class="tag ro">Read-only</span></header>
+        <button class="watch" data-chapter="dataExport">▶ Watch</button>
+        <p class="what">Download a full CSV of an object without writing SOQL.</p>
+        <ol>
+          <li>Pick an <strong>Object</strong>. Every field starts selected, so move out the ones you don't need.</li>
+          <li>Optionally set <strong>Max rows</strong>. Otherwise the export runs until the object runs out, up to 50,000 rows.</li>
+          <li>Click <strong>Export CSV</strong>. The file downloads in your browser.</li>
+        </ol>
+        <p class="note">Values are raw rather than locale-formatted, so the file can go straight back into Create Records.</p>
+      </article>
+      <article class="tool" id="data-masking">
+        <header><h4>Data Masking</h4><span class="tag rw">Writes</span></header>
+        <button class="watch" data-chapter="dataMasking">▶ Watch</button>
+        <p class="what">Replace personal data with fake values, for example before giving a sandbox to a vendor.</p>
+        <ol>
+          <li>Pick an <strong>Object</strong> and move the text, email and phone fields to mask into <strong>Fields to mask</strong>.</li>
+          <li>Optionally add <strong>filters</strong> (Equals, or Contains for text) so only matching records are masked. Multiple filters are ANDed.</li>
+          <li>Click <strong>Preview Masking</strong> to see the replacement values. Nothing is written yet.</li>
+          <li>Click <strong>Apply Masking</strong>. You get a result for each record.</li>
+        </ol>
+        <p class="note">Up to 200 records per run. Only fields you can update are offered.</p>
+      </article>
+    </div>
+
+    <div class="group-title"><h3>Schema</h3><span>Objects, fields and metadata</span></div>
+    <div class="tools">
+      <article class="tool" id="schema-explorer">
+        <header><h4>Schema Explorer</h4><span class="tag ro">Read-only</span></header>
+        <button class="watch" data-chapter="schemaExplorer">▶ Watch</button>
+        <p class="what">See every field on an object in one table.</p>
+        <ol>
+          <li>Pick an <strong>Object</strong>.</li>
+          <li>Type in <strong>Search fields</strong> to filter by label or API name.</li>
+          <li>Click a row's pencil icon to open that field in Setup.</li>
+        </ol>
+        <p class="note">The columns show type, what a lookup references, required, unique, external ID, createable and updateable.</p>
+      </article>
+      <article class="tool" id="relationship-map">
+        <header><h4>Relationship Map</h4><span class="tag ro">Read-only</span></header>
+        <button class="watch" data-chapter="relationshipMap">▶ Watch</button>
+        <p class="what">See how objects connect.</p>
+        <ol>
+          <li>Pick an <strong>Object</strong>. On the left is what it looks up to. On the right is what looks up to it.</li>
+          <li>Click any node to re-center the map on that object.</li>
+          <li>Each column shows 25 at a time. Use <strong>Show More</strong> for the rest.</li>
+        </ol>
+      </article>
+      <article class="tool" id="field-creator">
+        <header><h4>Field Creator</h4><span class="tag rw">Writes</span></header>
+        <button class="watch" data-chapter="fieldCreator">▶ Watch</button>
+        <p class="what">Create several custom fields in one go.</p>
+        <ol>
+          <li>Pick an <strong>Object</strong>. In each row, enter a Label (the API name fills in) and choose a Type.</li>
+          <li><strong>Options</strong> shows only the settings for that type: length, precision, picklist values, help text, required, unique and so on.</li>
+          <li><strong>Permissions</strong> sets Read/Edit per permission set. <strong>Apply to All Fields</strong> copies it to every row.</li>
+          <li>Use the copy icon to clone a row, or <strong>Add Row</strong> for more. Then click <strong>Deploy Fields</strong>.</li>
+        </ol>
+        <p class="note">Needs <em>Customize Application</em>. Lookup and Master-Detail aren't supported.</p>
+      </article>
+      <article class="tool" id="picklist-manager">
+        <header><h4>Picklist Manager</h4><span class="tag rw">Writes</span></header>
+        <button class="watch" data-chapter="picklistManager">▶ Watch</button>
+        <p class="what">Maintain a custom picklist's values without going through Setup.</p>
+        <ol>
+          <li>Pick an <strong>Object</strong> and a <strong>Picklist field</strong>. Active and inactive values are both listed.</li>
+          <li>Type a value and click <strong>Add Value</strong>. Use the arrows to reorder.</li>
+          <li>Toggle <strong>Active</strong> to deactivate a value, or edit the <strong>Label</strong> to rename it.</li>
+          <li>Click <strong>Save</strong>, or <strong>Discard</strong> to undo everything.</li>
+        </ol>
+        <p class="note">Renaming changes only the label, so existing records keep their value. The API can't delete values, so deactivate them instead. Needs <em>Customize Application</em>.</p>
+      </article>
+      <article class="tool" id="impact-analysis">
+        <header><h4>Impact Analysis</h4><span class="tag ro">Read-only</span></header>
+        <button class="watch" data-chapter="impactAnalysis">▶ Watch</button>
+        <p class="what">Find what uses a custom field or object before you change it.</p>
+        <ol>
+          <li>Pick an <strong>Object</strong> and a <strong>Custom field</strong>, or turn on <strong>Whole object</strong>.</li>
+          <li>Click <strong>Analyze</strong>. References are grouped by type: flows, Apex, layouts, formula fields, validation rules and more.</li>
+        </ol>
+        <p class="note">Uses Salesforce's Dependency API, which doesn't include Reports and is capped at 2,000 references. An empty result means nothing was found. It doesn't guarantee nothing depends on the field.</p>
+      </article>
+      <article class="tool" id="translation-finder">
+        <header><h4>Translation Finder</h4><span class="tag ro">Read-only</span></header>
+        <button class="watch" data-chapter="translationFinder">▶ Watch</button>
+        <p class="what">Find where a piece of UI text comes from, so you know what to translate.</p>
+        <ol>
+          <li>Type at least two characters of the text you see.</li>
+          <li>Matches are grouped into Custom Label, Object, Field (label or help text) and Picklist Value.</li>
+          <li>Each result links to the right place to add the translation.</li>
+        </ol>
+        <p class="note">Results are capped at 100. In orgs with many managed packages, a search can take a few seconds.</p>
+      </article>
+    </div>
+
+    <div class="group-title"><h3>Users &amp; Security</h3><span>Who can do what</span></div>
+    <div class="tools">
+      <article class="tool" id="permissions-groups">
+        <header><h4>Permissions and Groups</h4><span class="tag rw">Writes</span></header>
+        <button class="watch" data-chapter="permissionsGroups">▶ Watch</button>
+        <p class="what">Assign access to many users at once.</p>
+        <ol>
+          <li>Search and tick the permission sets, permission set groups or public groups to assign. The Type filter narrows the list.</li>
+          <li>Click <strong>Next: Select Users</strong>, then search by name, username or email and tick the users.</li>
+          <li>Optionally set an <strong>Expiration Date</strong> (permission sets and groups only), then click <strong>Assign</strong>.</li>
+        </ol>
+        <p class="note">You get one result row per user and item. Re-assigning updates the expiry date instead of failing.</p>
+      </article>
+      <article class="tool" id="fls-matrix">
+        <header><h4>FLS Matrix</h4><span class="tag rw">Writes</span></header>
+        <button class="watch" data-chapter="flsMatrix">▶ Watch</button>
+        <p class="what">Edit field-level security for many permission sets at once.</p>
+        <ol>
+          <li>Pick an <strong>Object</strong>, then <strong>Select Permission Sets</strong> to choose which ones appear as columns.</li>
+          <li>Tick or clear <strong>R</strong>/<strong>E</strong> per field. The top row sets object access (Read, Create, Edit, Delete, View All, Modify All).</li>
+          <li>Click <strong>Save Changes</strong>. Clearing a box removes that access.</li>
+        </ol>
+        <p class="note">The same dependency rules as Setup apply. For example, Edit implies Read. Needs <em>Customize Application</em> to save.</p>
+      </article>
+      <article class="tool" id="org-chart">
+        <header><h4>Org Chart</h4><span class="tag ro">Read-only</span></header>
+        <button class="watch" data-chapter="orgChart">▶ Watch</button>
+        <p class="what">Browse the manager hierarchy.</p>
+        <ol>
+          <li>It opens on you, with your manager on the left and your direct reports on the right.</li>
+          <li>Click anyone to re-center on them, or use <strong>Jump to a user</strong> to search.</li>
+        </ol>
+      </article>
+      <article class="tool" id="record-access">
+        <header><h4>Record Access Inspector</h4><span class="tag ro">Read-only</span></header>
+        <button class="watch" data-chapter="recordAccess">▶ Watch</button>
+        <p class="what">Check what a user can do with one record.</p>
+        <ol>
+          <li>Paste a <strong>Record Id</strong> and search for a <strong>User</strong>.</li>
+          <li>Click <strong>Check Access</strong> to see Read, Edit, Delete and Transfer, plus the max access level.</li>
+        </ol>
+        <p class="note">You need to see the record yourself. A "no access" result can also mean the record isn't visible to you.</p>
+      </article>
+      <article class="tool" id="user-comparison">
+        <header><h4>User Comparison</h4><span class="tag ro">Read-only</span></header>
+        <button class="watch" data-chapter="userComparison">▶ Watch</button>
+        <p class="what">Find out why two users get different results.</p>
+        <ol>
+          <li>Pick <strong>User A</strong> and <strong>User B</strong>.</li>
+          <li>Compare settings, profile and role, permission sets, permission set groups, public groups and queues.</li>
+          <li>Only differences show by default, highlighted. Turn on <strong>Show All</strong> to see everything.</li>
+        </ol>
+      </article>
+    </div>
+
+    <div class="group-title"><h3>Org Info</h3><span>Capacity at a glance</span></div>
+    <div class="tools">
+      <article class="tool" id="limits-licenses">
+        <header><h4>Limits and Licenses</h4><span class="tag ro">Read-only</span></header>
+        <button class="watch" data-chapter="limitsLicenses">▶ Watch</button>
+        <p class="what">See how close the org is to its limits.</p>
+        <ol>
+          <li><strong>Limits</strong> shows every org limit as a gauge, highest usage first.</li>
+          <li><strong>Licenses</strong> shows user and permission set license usage as used / total.</li>
+          <li>Click <strong>Refresh</strong> to reload.</li>
+        </ol>
+      </article>
+      <article class="tool" id="tab-settings">
+        <header><h4>Tab Settings</h4><span class="tag ro">Admin</span></header>
+        <button class="watch" data-chapter="tabSettings">▶ Watch</button>
+        <p class="what">Show only the tools your team needs.</p>
+        <ol>
+          <li>Each tool has a <strong>Salesforce Inspector Native Tab</strong> custom metadata record.</li>
+          <li>Clear <strong>Is Enabled</strong> to hide a tool. The change applies the next time the app loads, with no redeploy.</li>
+          <li><strong>Open in Setup</strong> on the Tab Settings page goes straight to those records.</li>
+        </ol>
+      </article>
+    </div>
+  </section>
+
+  <section id="permissions">
+    <h2>Permissions</h2>
+    <p class="sub">The bundled permission set opens the app and its Apex classes. It grants <strong>no</strong> object or field access, so each tool works only with what the user can already reach. A few tools also need a system permission.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tool</th><th>Also needs</th></tr></thead>
+        <tbody>
+          <tr><td>Field Creator, Picklist Manager, FLS Matrix (saving)</td><td><strong>Customize Application</strong>. Salesforce requires it for any schema change.</td></tr>
+          <tr><td>Permissions and Groups</td><td><strong>Assign Permission Sets</strong> for permission sets and groups. <strong>Manage Public Groups</strong> for public groups.</td></tr>
+          <tr><td>Query Records</td><td>Nothing extra. It allows general-purpose SOQL, so assign it as carefully as you would Data Loader or Workbench.</td></tr>
+          <tr><td>All other tools</td><td>Nothing extra.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="faq">
+    <h2>FAQ</h2>
+    <details><summary>Does it send data anywhere outside Salesforce?</summary><p>No. It's Lightning components and Apex running in your org. The tools that use the Tooling API call your org's own domain. There are no external scripts, CDNs or third-party endpoints.</p></details>
+    <details><summary>Do I need a Remote Site Setting, Named Credential or Connected App?</summary><p>No. The Tooling API calls go to the org's own domain, which needs no extra setup.</p></details>
+    <details><summary>Is it a managed package?</summary><p>No. It's unpackaged source you deploy with the Salesforce CLI. Everything uses the <code>InspectorNative</code> prefix, so it won't clash with your own components.</p></details>
+    <details><summary>How do I remove it?</summary><p>Delete the components with <code>sf project delete source --source-dir main --target-org myorg</code>. Fields, values and permissions you changed with the tools stay as they are.</p></details>
+    <details><summary>How does it work under the hood?</summary><p>See <a href="https://github.com/ilchec/salesforce-inspector-native/blob/main/docs/ARCHITECTURE.md">docs/ARCHITECTURE.md</a> for how each tool works and where Apex is used.</p></details>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>MIT licensed · © 2026 Ilia Chechuro · Not affiliated with or endorsed by Salesforce, Inc.</span>
+    <a href="https://github.com/ilchec/salesforce-inspector-native">github.com/ilchec/salesforce-inspector-native</a>
+  </div>
+</footer>
+
+<script>
+const CHAPTERS = [{"id":"intro","title":"Opening the app","start":0},{"id":"createRecords","title":"Create Records","start":17.3},{"id":"queryRecords","title":"Query Records","start":57.9},{"id":"dataExport","title":"Data Export","start":107.3},{"id":"dataMasking","title":"Data Masking","start":127.9},{"id":"schemaExplorer","title":"Schema Explorer","start":163.1},{"id":"relationshipMap","title":"Relationship Map","start":182.4},{"id":"fieldCreator","title":"Field Creator","start":205.9},{"id":"picklistManager","title":"Picklist Manager","start":248.1},{"id":"impactAnalysis","title":"Impact Analysis","start":277.5},{"id":"translationFinder","title":"Translation Finder","start":297.9},{"id":"permissionsGroups","title":"Permissions and Groups","start":313},{"id":"flsMatrix","title":"FLS Matrix","start":337.5},{"id":"orgChart","title":"Org Chart","start":365.5},{"id":"recordAccess","title":"Record Access Inspector","start":387},{"id":"userComparison","title":"User Comparison","start":405.6},{"id":"limitsLicenses","title":"Limits and Licenses","start":429.7},{"id":"tabSettings","title":"Tab Settings","start":446.4}];
+const video = document.getElementById('video');
+const list = document.getElementById('chapterList');
+const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+const byId = Object.fromEntries(CHAPTERS.map((c) => [c.id, c]));
+
+CHAPTERS.forEach((c) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.dataset.id = c.id;
+  b.innerHTML = `<span></span><span>${fmt(c.start)}</span>`;
+  b.firstChild.textContent = c.title;
+  b.addEventListener('click', () => seek(c.id, false));
+  list.appendChild(b);
+});
+
+function seek(id, scroll) {
+  const c = byId[id];
+  if (!c) return;
+  video.currentTime = c.start;
+  video.play().catch(() => {});
+  if (scroll) document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
+}
+
+document.querySelectorAll('.watch').forEach((b) => {
+  if (!byId[b.dataset.chapter]) { b.hidden = true; return; }
+  b.textContent = `▶ Watch (${fmt(byId[b.dataset.chapter].start)})`;
+  b.addEventListener('click', () => seek(b.dataset.chapter, true));
+});
+
+video.addEventListener('timeupdate', () => {
+  let current = null;
+  for (const c of CHAPTERS) if (video.currentTime >= c.start - 0.25) current = c.id;
+  list.querySelectorAll('button').forEach((b) => b.setAttribute('aria-current', String(b.dataset.id === current)));
+});
+</script>
+</body>
+</html>
