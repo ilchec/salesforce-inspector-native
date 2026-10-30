@@ -10,6 +10,9 @@
 - **User Comparison:** no longer lists each user's internal profile permission set (shown as a raw
   Id like `00e...`) among their permission sets.
 - **Picklist Manager:** the "Global Value Set" error now carries its message to Apex callers too.
+- Docs: a setup video and expanded Install steps on the project site (assigning access, granting
+  admins Customize Application and Assign Permission Sets, hiding tools). Public groups need the
+  right to manage groups (normally Manage Users); there's no "Manage Public Groups" permission.
 - Apex tests now pass in any org: they use standard fields instead of custom fields that only
   existed in the original dev org, and cover Person Accounts orgs.
 

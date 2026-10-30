@@ -417,11 +417,12 @@ to hide.
      write in this app, no extra system permission.
    - Field Creator (both creating fields and its Permissions modal) and Picklist Manager both
      additionally need the running user to hold the org-level **"Customize Application"** system
-     permission - a Salesforce platform rule for any schema change, which this permission set cannot
-     grant. No Remote Site Setting or other manual Setup step is needed for either one's Tooling API
+     permission - a Salesforce platform rule for any schema change, which this permission set
+     deliberately doesn't include (grant it through a separate admin-only permission set). No Remote Site Setting or other manual Setup step is needed for either one's Tooling API
      callout - both target the org's own domain, which doesn't require pre-authorization.
    - Permissions and Groups needs **"Assign Permission Sets"** (for the Permission Set/Group half)
-     and **"Manage Public Groups"** (for the Public Group half). A user missing one can still use the
+     and the right to manage public groups (for the Public Group half - Salesforce has no separate
+     permission for that; in Setup it normally comes with **"Manage Users"**). A user missing one can still use the
      tab for the half they do have rights to.
    - FLS Matrix additionally needs **"Customize Application"** to save changes - the same rule Field
      Creator/Picklist Manager need, since field-level security is a schema-adjacent setting.

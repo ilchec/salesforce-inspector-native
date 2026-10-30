@@ -38,6 +38,9 @@ Then:
    Salesforce Inspector Native → Manage Assignments → Add Assignment.
 2. Open the App Launcher and search for **Salesforce Inspector Native**.
 
+The [setup video](https://ilchec.github.io/salesforce-inspector-native/#install) shows these steps,
+plus granting admins the extra permissions some tools need and hiding tools you don't want.
+
 Try it in a sandbox or Developer Edition org first. Several tools change data, schema or
 security (see [What writes to your org](#what-writes-to-your-org)).
 
@@ -71,12 +74,13 @@ The bundled permission set grants access to the app, its tab, its Apex classes a
 Visualforce page. It **doesn't** grant access to any object or field. Every tool only works with
 data and metadata the user can already reach through their profile or other permission sets.
 
-A few tools also need a system permission that the permission set can't grant:
+A few tools also need a system permission that the bundled permission set deliberately doesn't
+include. Grant it through a separate permission set for admins only:
 
 | Tool | Extra permission needed |
 |---|---|
 | Field Creator, Picklist Manager, FLS Matrix (saving) | **Customize Application** (Salesforce requires it for any schema change) |
-| Permissions and Groups | **Assign Permission Sets** for permission sets/groups, and **Manage Public Groups** for public groups |
+| Permissions and Groups | **Assign Permission Sets** for permission sets/groups. For public groups, the right to manage groups (normally **Manage Users**) |
 | Query Records, Data Masking | None, but Query Records allows general-purpose SOQL. Grant it as carefully as you would Data Loader or Workbench. |
 | All other tools | None |
 

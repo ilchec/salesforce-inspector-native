@@ -53,6 +53,9 @@ header nav a:hover { color: var(--text); }
 .player { margin-top: -84px; display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
 .player video { width: 100%; aspect-ratio: 1440 / 900; border-radius: 8px; background: #000; display: block; }
 .chapters { overflow-y: auto; max-height: 480px; }
+.player.setup { margin: 0 0 18px; }
+.steps ul { margin: 0 0 8px; padding-left: 20px; color: var(--muted); }
+.steps .watch { float: right; margin-left: 12px; }
 .chapters h3 { margin: 4px 6px 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
 .chapters button { all: unset; box-sizing: border-box; display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 7px 10px; border-radius: 6px; cursor: pointer; font-size: 14px; }
 .chapters button:hover { background: var(--surface-2); }
@@ -143,7 +146,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       <span class="chip">No external scripts</span>
     </div>
     <div class="btns">
-      <a class="btn primary" href="#install">Install in 2 commands</a>
+      <a class="btn primary" href="#install">Install and set up</a>
       <a class="btn ghost" href="https://github.com/ilchec/salesforce-inspector-native">View on GitHub</a>
     </div>
   </div>
@@ -174,8 +177,19 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   </section>
 
   <section id="install">
-    <h2>Install</h2>
-    <p class="sub">Try it in a sandbox or Developer Edition org first. You need the <a href="https://developer.salesforce.com/tools/salesforcecli">Salesforce CLI</a>.</p>
+    <h2>Install and set up</h2>
+    <p class="sub">Try it in a sandbox or Developer Edition org first. You need the <a href="https://developer.salesforce.com/tools/salesforcecli">Salesforce CLI</a>. The video below walks through steps 2 to 5 in Setup.</p>
+    <div class="player setup" id="setupDemo">
+      <video id="setupVideo" controls preload="metadata" playsinline poster="media/setup-poster.jpg">
+        <source src="media/setup.mp4" type="video/mp4">
+        <track kind="chapters" src="media/setup-chapters.vtt" srclang="en" label="Chapters" default>
+        Your browser can't play this video. <a href="media/setup.mp4">Download it</a> instead.
+      </video>
+      <div class="chapters" aria-label="Setup video chapters">
+        <h3>Setup steps</h3>
+        <div id="setupChapterList"></div>
+      </div>
+    </div>
     <ol class="steps">
       <li>
         <h3>Deploy the metadata</h3>
@@ -185,12 +199,30 @@ sf org login web --alias myorg
 sf project deploy start --target-org myorg</code></pre>
       </li>
       <li>
-        <h3>Assign the permission set</h3>
-        <p>Setup → Permission Sets → <strong>Salesforce Inspector Native</strong> → Manage Assignments → Add Assignment. Or from the CLI:</p>
+        <h3>Give people access</h3>
+        <button class="watch" data-setup-chapter="access">▶ Watch</button>
+        <p>Setup → Permission Sets → <strong>Salesforce Inspector Native</strong> → Manage Assignments → Add Assignment. Pick the users, optionally set an expiry date, then Assign. Or from the CLI:</p>
         <pre><code>sf org assign permset --name Salesforce_Inspector_Native --target-org myorg</code></pre>
+        <p>It grants the app, its Apex classes and one Visualforce page, but no object or field access. Every tool still respects each user's own access.</p>
+      </li>
+      <li>
+        <h3>Grant admins the extra system permissions</h3>
+        <button class="watch" data-setup-chapter="admin">▶ Watch</button>
+        <p>Only needed for people who should change schema or access. Create a separate permission set (for example <em>Inspector Native Admin</em>), open <strong>System Permissions</strong> → Edit, turn on:</p>
+        <ul>
+          <li><strong>Customize Application</strong>, for Field Creator, Picklist Manager and saving in FLS Matrix.</li>
+          <li><strong>Assign Permission Sets</strong>, for Permissions and Groups.</li>
+        </ul>
+        <p>Salesforce adds the permissions these depend on (such as View Setup and Configuration) and asks you to confirm. Then assign it the same way as step 2. Everyone else can use the read-only tools without it.</p>
+      </li>
+      <li>
+        <h3>Choose which tools appear (optional)</h3>
+        <button class="watch" data-setup-chapter="tabs">▶ Watch</button>
+        <p>Setup → Custom Metadata Types → <strong>Salesforce Inspector Native Tab</strong> → Manage Records. Edit a tool's record and clear <strong>Is Enabled</strong> to hide it. It takes effect the next time the app loads, with no redeploy. In the app, <strong>Tab Settings</strong> links straight there.</p>
       </li>
       <li>
         <h3>Open the app</h3>
+        <button class="watch" data-setup-chapter="result">▶ Watch</button>
         <p>In the App Launcher, search for <strong>Salesforce Inspector Native</strong>. Tools are grouped into Data, Schema, Users &amp; Security and Org Info in the left-hand menu.</p>
       </li>
     </ol>
@@ -410,7 +442,7 @@ sf project deploy start --target-org myorg</code></pre>
         <thead><tr><th>Tool</th><th>Also needs</th></tr></thead>
         <tbody>
           <tr><td>Field Creator, Picklist Manager, FLS Matrix (saving)</td><td><strong>Customize Application</strong>. Salesforce requires it for any schema change.</td></tr>
-          <tr><td>Permissions and Groups</td><td><strong>Assign Permission Sets</strong> for permission sets and groups. <strong>Manage Public Groups</strong> for public groups.</td></tr>
+          <tr><td>Permissions and Groups</td><td><strong>Assign Permission Sets</strong> for permission sets and groups. For public groups, the right to manage groups (normally <strong>Manage Users</strong>).</td></tr>
           <tr><td>Query Records</td><td>Nothing extra. It allows general-purpose SOQL, so assign it as carefully as you would Data Loader or Workbench.</td></tr>
           <tr><td>All other tools</td><td>Nothing extra.</td></tr>
         </tbody>
@@ -460,10 +492,42 @@ function seek(id, scroll) {
   if (scroll) document.getElementById('demo').scrollIntoView({ behavior: 'smooth' });
 }
 
-document.querySelectorAll('.watch').forEach((b) => {
+document.querySelectorAll('.watch[data-chapter]').forEach((b) => {
   if (!byId[b.dataset.chapter]) { b.hidden = true; return; }
   b.textContent = `▶ Watch (${fmt(byId[b.dataset.chapter].start)})`;
   b.addEventListener('click', () => seek(b.dataset.chapter, true));
+});
+
+// Setup video: same chapter list and Watch buttons, separate player.
+const SETUP_CHAPTERS = [{"id":"intro","title":"Introduction","start":0},{"id":"access","title":"Give people access","start":6.1},{"id":"admin","title":"Grant extra system permissions","start":67.9},{"id":"tabs","title":"Choose which tools appear","start":154.1},{"id":"result","title":"Check the result","start":187.7}];
+const setupVideo = document.getElementById('setupVideo');
+const setupList = document.getElementById('setupChapterList');
+const setupById = Object.fromEntries(SETUP_CHAPTERS.map((c) => [c.id, c]));
+function seekSetup(id) {
+  const c = setupById[id];
+  if (!c) return;
+  setupVideo.currentTime = c.start;
+  setupVideo.play().catch(() => {});
+  document.getElementById('setupDemo').scrollIntoView({ behavior: 'smooth' });
+}
+SETUP_CHAPTERS.forEach((c) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.dataset.id = c.id;
+  b.innerHTML = `<span></span><span>${fmt(c.start)}</span>`;
+  b.firstChild.textContent = c.title;
+  b.addEventListener('click', () => { setupVideo.currentTime = c.start; setupVideo.play().catch(() => {}); });
+  setupList.appendChild(b);
+});
+document.querySelectorAll('[data-setup-chapter]').forEach((b) => {
+  if (!setupById[b.dataset.setupChapter]) { b.hidden = true; return; }
+  b.textContent = `▶ Watch (${fmt(setupById[b.dataset.setupChapter].start)})`;
+  b.addEventListener('click', () => seekSetup(b.dataset.setupChapter));
+});
+setupVideo.addEventListener('timeupdate', () => {
+  let current = null;
+  for (const c of SETUP_CHAPTERS) if (setupVideo.currentTime >= c.start - 0.25) current = c.id;
+  setupList.querySelectorAll('button').forEach((b) => b.setAttribute('aria-current', String(b.dataset.id === current)));
 });
 
 video.addEventListener('timeupdate', () => {
