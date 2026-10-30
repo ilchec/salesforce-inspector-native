@@ -13,12 +13,10 @@
  * for a permission set's field access on this object - an explicit uncheck must actually remove
  * access, not be silently ignored the way it is there. saveFieldPermissions deletes the
  * FieldPermissions row entirely when both Read and Edit end up unchecked, rather than leaving a
- * zero-access row behind. ObjectPermissions rows are only ever upserted, never deleted, even when
- * every box is unchecked - unlike FieldPermissions, whether an ObjectPermissions row can be deleted
- * via DML at all wasn't confirmed, so this only ever zeroes out its access flags, the same end
- * state Setup's own "Object Settings" page leaves an object's permissions in when nothing is
- * granted - never an attempted delete that might fail for a reason unrelated to what the user
- * actually asked to do.
+ * zero-access row behind. ObjectPermissions rows are only ever upserted, never deleted directly -
+ * unchecking every box zeroes out the row's flags, and the platform itself then removes a row with
+ * no access left (confirmed live), the same end state Setup's own "Object Settings" page leaves.
+ * A new row that would grant nothing is never inserted, since the platform rejects that outright.
  *
  * ensureObjectReadForFieldGrants auto-grants object-level Read whenever a field-level grant needs it
  * and the target permission set doesn't already have it on this object - confirmed live that the
@@ -39,6 +37,12 @@
  * grants have to land in genuinely separate, sequential Apex transactions (two separate @AuraEnabled
  * calls, not two DML statements in one call) for the dependency to actually be satisfied by the time
  * the field-level grant is attempted.
+ *
+ * With Person Accounts enabled, the platform also makes Account Read depend on Contact Read
+ * ("Permission Read Account depends on permission(s): Read Contact" - confirmed live; Edit, Delete,
+ * View All and Modify All on Account need nothing beyond that). Setup's own Object Settings page
+ * grants Contact Read alongside, so both methods here do the same via addRequiredContactRead,
+ * in the same DML statement as the Account row.
  */
 public with sharing class InspectorNativeFlsMatrix {
     public class FieldOption {
@@ -219,6 +223,7 @@ public with sharing class InspectorNativeFlsMatrix {
         if (toUpsert.isEmpty()) {
             return;
         }
+        addRequiredContactRead(objectApiName, toUpsert);
 
         try {
             upsert toUpsert;
@@ -355,7 +360,8 @@ public with sharing class InspectorNativeFlsMatrix {
                     continue;
                 }
                 ObjectPermissions objectPermission = existingObjectPermissionsByPermissionSetId.get(grant.permissionSetId);
-                if (objectPermission == null) {
+                Boolean isNew = objectPermission == null;
+                if (isNew) {
                     objectPermission = new ObjectPermissions();
                     objectPermission.ParentId = grant.permissionSetId;
                     objectPermission.SobjectType = objectApiName;
@@ -370,6 +376,12 @@ public with sharing class InspectorNativeFlsMatrix {
                 objectPermission.PermissionsViewAllRecords = grant.viewAllAccess == true;
                 objectPermission.PermissionsRead = grant.readAccess == true || objectPermission.PermissionsEdit || objectPermission.PermissionsViewAllRecords;
                 objectPermission.PermissionsCreate = grant.createAccess == true;
+                // The platform rejects inserting a row with every flag off ("You must enable at least
+                // one permission"), though updating an existing row to all-off is fine - so a new
+                // row that grants nothing is simply not created.
+                if (isNew && !objectPermission.PermissionsRead && !objectPermission.PermissionsCreate) {
+                    continue;
+                }
                 objectPermissionsToUpsertByPermissionSetId.put(grant.permissionSetId, objectPermission);
             }
 
@@ -382,6 +394,7 @@ public with sharing class InspectorNativeFlsMatrix {
         }
 
         List<ObjectPermissions> toUpsertObjects = objectPermissionsToUpsertByPermissionSetId.values();
+        addRequiredContactRead(objectApiName, toUpsertObjects);
 
         // Uncaught, this DML would surface to the client as a generic "Unknown error" - Salesforce
         // masks non-AuraHandledException exceptions from @AuraEnabled methods by default, hiding
@@ -433,6 +446,49 @@ public with sharing class InspectorNativeFlsMatrix {
                     + '. ' + targetPermissionSetContext
             );
         }
+    }
+
+    // Person Accounts only (see the class doc comment): for every permission set about to hold
+    // Account Read, appends a Contact Read grant to the same list when it doesn't have one yet.
+    // Existing Contact rows only get Read switched on - their other flags are left alone.
+    @TestVisible
+    private static void addRequiredContactRead(String objectApiName, List<ObjectPermissions> objectPermissions) {
+        if (objectApiName != 'Account' || !isPersonAccountsEnabled()) {
+            return;
+        }
+        Set<Id> permissionSetIds = new Set<Id>();
+        for (ObjectPermissions objectPermission : objectPermissions) {
+            if (objectPermission.SobjectType == 'Account' && objectPermission.PermissionsRead == true) {
+                permissionSetIds.add(objectPermission.ParentId);
+            }
+        }
+        if (permissionSetIds.isEmpty()) {
+            return;
+        }
+
+        Map<Id, ObjectPermissions> contactByPermissionSetId = new Map<Id, ObjectPermissions>();
+        for (ObjectPermissions existing : [
+            SELECT Id, ParentId, PermissionsRead
+            FROM ObjectPermissions
+            WHERE SobjectType = 'Contact' AND ParentId IN :permissionSetIds
+        ]) {
+            contactByPermissionSetId.put(existing.ParentId, existing);
+        }
+        for (Id permissionSetId : permissionSetIds) {
+            ObjectPermissions contactPermission = contactByPermissionSetId.get(permissionSetId);
+            if (contactPermission == null) {
+                contactPermission = new ObjectPermissions(ParentId = permissionSetId, SobjectType = 'Contact');
+            } else if (contactPermission.PermissionsRead == true) {
+                continue;
+            }
+            contactPermission.PermissionsRead = true;
+            objectPermissions.add(contactPermission);
+        }
+    }
+
+    @TestVisible
+    private static Boolean isPersonAccountsEnabled() {
+        return Schema.SObjectType.Account.fields.getMap().containsKey('IsPersonAccount');
     }
 
     private class FieldOptionByLabel implements Comparator<FieldOption> {

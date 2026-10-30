@@ -230,7 +230,11 @@ public with sharing class InspectorNativePicklistManager {
         Map<String, Object> valueSet = metadata != null ? (Map<String, Object>) metadata.get('valueSet') : null;
         Object valueSetDefinition = valueSet != null ? valueSet.get('valueSetDefinition') : null;
         if (valueSetDefinition == null) {
-            throw new AuraHandledException('This field uses a shared picklist value set (a Global Value Set) - not editable here.');
+            // setMessage too, or getMessage() returns "Script-thrown exception" to any Apex caller.
+            String message = 'This field uses a shared picklist value set (a Global Value Set) - not editable here.';
+            AuraHandledException error = new AuraHandledException(message);
+            error.setMessage(message);
+            throw error;
         }
         return (Map<String, Object>) valueSetDefinition;
     }

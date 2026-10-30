@@ -242,8 +242,13 @@ package does. For installing and using the app, start with the [README](../READM
   object-level Read. Checking a box enforces the same dependency chain Setup's own UI does (Edit
   implies Read; Delete implies Read+Edit; View All implies Read; Modify All implies
   Read+Edit+Delete), client-side and re-applied server-side on Save. Unlike field grants, an
-  `ObjectPermissions` row is only ever upserted, never deleted - unchecking everything zeroes out
-  its access flags instead, the same end state Setup's own "Object Settings" page leaves things in.
+  `ObjectPermissions` row is only ever upserted, never deleted directly - unchecking everything
+  zeroes out its access flags, and Salesforce then removes the empty row itself, the same end state
+  Setup's own "Object Settings" page leaves things in.
+
+  With Person Accounts enabled, Salesforce makes Account Read depend on Contact Read. Whenever a
+  save grants Account Read, Contact Read is granted alongside it in the same DML statement (just
+  Read - nothing broader), as Setup does.
 
   Saving a field-level grant for a permission set that doesn't yet have object-level Read on the
   same object auto-grants that Read alongside it, in its own preceding Apex call

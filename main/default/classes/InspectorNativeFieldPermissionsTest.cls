@@ -26,8 +26,8 @@ private class InspectorNativeFieldPermissionsTest {
 
         Test.startTest();
         InspectorNativeFieldPermissions.grantFieldPermissions(
-            'Account',
-            'Test_Perm_Field__c',
+            'Opportunity',
+            'Description',
             new List<InspectorNativeFieldPermissionGrant>{ grant }
         );
         Test.stopTest();
@@ -35,7 +35,7 @@ private class InspectorNativeFieldPermissionsTest {
         FieldPermissions created = [
             SELECT PermissionsRead, PermissionsEdit
             FROM FieldPermissions
-            WHERE ParentId = :permissionSet.Id AND SobjectType = 'Account' AND Field = 'Account.Test_Perm_Field__c'
+            WHERE ParentId = :permissionSet.Id AND SobjectType = 'Opportunity' AND Field = 'Opportunity.Description'
         ];
         System.assertEquals(true, created.PermissionsRead);
         System.assertEquals(true, created.PermissionsEdit);
@@ -53,8 +53,8 @@ private class InspectorNativeFieldPermissionsTest {
 
         Test.startTest();
         InspectorNativeFieldPermissions.grantFieldPermissions(
-            'Account',
-            'Test_Perm_Field2__c',
+            'Opportunity',
+            'NextStep',
             new List<InspectorNativeFieldPermissionGrant>{ grant }
         );
         Test.stopTest();
@@ -62,7 +62,7 @@ private class InspectorNativeFieldPermissionsTest {
         FieldPermissions created = [
             SELECT PermissionsRead, PermissionsEdit
             FROM FieldPermissions
-            WHERE ParentId = :permissionSet.Id AND SobjectType = 'Account' AND Field = 'Account.Test_Perm_Field2__c'
+            WHERE ParentId = :permissionSet.Id AND SobjectType = 'Opportunity' AND Field = 'Opportunity.NextStep'
         ];
         System.assertEquals(true, created.PermissionsRead, 'Edit access should imply read access');
         System.assertEquals(true, created.PermissionsEdit);
@@ -80,8 +80,8 @@ private class InspectorNativeFieldPermissionsTest {
 
         Test.startTest();
         InspectorNativeFieldPermissions.grantFieldPermissions(
-            'Account',
-            'Test_Perm_Field3__c',
+            'Opportunity',
+            'LeadSource',
             new List<InspectorNativeFieldPermissionGrant>{ grant }
         );
         Test.stopTest();
@@ -89,7 +89,7 @@ private class InspectorNativeFieldPermissionsTest {
         List<FieldPermissions> created = [
             SELECT Id
             FROM FieldPermissions
-            WHERE ParentId = :permissionSet.Id AND SobjectType = 'Account' AND Field = 'Account.Test_Perm_Field3__c'
+            WHERE ParentId = :permissionSet.Id AND SobjectType = 'Opportunity' AND Field = 'Opportunity.LeadSource'
         ];
         System.assertEquals(0, created.size(), 'Nothing should be created when neither box is checked');
     }

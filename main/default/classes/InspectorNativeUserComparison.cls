@@ -22,6 +22,10 @@
  * row is always categorized as a group, never miscounted as a plain permission set the user
  * separately has.
  *
+ * Every user also has a PermissionSetAssignment to their profile's own internal permission set
+ * (IsOwnedByProfile = true, labelled with a raw Id like "00e..."). The profile is already shown
+ * separately, so those rows are filtered out rather than listed as a permission set.
+ *
  * Unlike Picklist Manager/FLS Matrix (editors, which only ever offer Type = 'Regular' permission
  * sets - the only ones actually editable), this is a read-only reporting tool: every directly-
  * assigned permission set is included regardless of Type, Standard (package-provided) ones
@@ -69,7 +73,7 @@ public with sharing class InspectorNativeUserComparison {
             for (PermissionSetAssignment assignment : [
                 SELECT AssigneeId, PermissionSetGroupId, PermissionSetGroup.MasterLabel, PermissionSet.Label
                 FROM PermissionSetAssignment
-                WHERE AssigneeId IN :userIds
+                WHERE AssigneeId IN :userIds AND PermissionSet.IsOwnedByProfile = false
             ]) {
                 UserAssignments assignments = assignmentsByUserId.get(assignment.AssigneeId);
                 if (assignment.PermissionSetGroupId != null) {

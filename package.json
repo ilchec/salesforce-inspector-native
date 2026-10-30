@@ -1,7 +1,7 @@
 {
   "name": "salesforce-inspector-native",
   "private": true,
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "A standalone Lightning app bundling admin/developer tools, deployed entirely as Salesforce metadata - no browser extension or local install required.",
   "scripts": {
     "test:unit": "sfdx-lwc-jest",

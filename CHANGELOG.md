@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.8.1 - 2026-10-30
+
+- **FLS Matrix:** saving Account access in an org with Person Accounts no longer fails with "Read
+  Account depends on Read Contact". Contact Read is now granted alongside Account Read, as Setup
+  does.
+- **FLS Matrix:** saving object access for a permission set with no access yet, with every box
+  left unchecked, no longer fails with "You must enable at least one permission".
+- **User Comparison:** no longer lists each user's internal profile permission set (shown as a raw
+  Id like `00e...`) among their permission sets.
+- **Picklist Manager:** the "Global Value Set" error now carries its message to Apex callers too.
+- Apex tests now pass in any org: they use standard fields instead of custom fields that only
+  existed in the original dev org, and cover Person Accounts orgs.
+
 ## 0.8.0 - 2026-10-29
 
 First standalone release, split out from a larger monorepo of Lightning components.
